@@ -1,0 +1,118 @@
+//             {u, d, r, l = t}
+//             {up, down, right, left = trigger}
+int relays[] = {6, 5, 7, 8}; 
+void setup()
+{
+  for (int j = 0; j < 4; j++) {
+    pinMode(relays[j], OUTPUT);
+    digitalWrite(relays[j], LOW);
+  }
+    Serial.begin(9600);
+}
+
+//toggle buttons
+//case 'u,d,r,t'
+void toggleButton(char c) {
+  //c is the button input by user
+  char buttons[] = {'u', 'd', 'r', 't'};
+  for (int j = 0; j < 4; j++) {
+    if (c == buttons[j]) {
+      digitalWrite(relays[j],HIGH);
+      delay(100);
+      digitalWrite(relays[j],LOW); 
+      break;
+    }
+  }
+}
+
+//more complicated button stuff
+//case 'D' and 'U'
+void hold(char c, int vol) {
+  int timeHold = timeV(vol);
+  if (c == 'D') {
+    digitalWrite(5,HIGH);
+    delay(timeHold);
+    digitalWrite(5,LOW);
+  } else if (c == 'U') {
+    digitalWrite(6,HIGH);
+    delay(timeHold);
+    digitalWrite(6,LOW);
+  }
+}
+
+//calculate time to get volume
+int timeV(int vol) {
+  //Serial.print("vol: ");
+  //Serial.println(vol);
+  //int timeT = 148*vol+1150;
+  //under 25,20
+  int timeT = (int) 180*vol+965;
+  //Serial.print("time: ");
+  //Serial.println(timeT);
+  return timeT;
+}
+
+//on function
+int pinZero = 2;
+void on() {
+  digitalWrite(pinZero, HIGH);
+}
+
+//off function
+void off() {
+  digitalWrite(pinZero, LOW);
+}
+
+//main
+void loop()
+{
+  //change to use time delay
+  while (Serial.available() > 0) {
+    //for inputs, use form "button_letter,vol" 
+    String line = Serial.readString();
+    char strToChar[10];
+    line.toCharArray(strToChar, line.length()); 
+    char func = strToChar[0];  
+    //Serial.print("line: ");
+    //Serial.print(line);  
+    //Serial.print("function: ");
+    //Serial.println(func);
+    
+    //functions
+    int vol;
+    switch (func) {
+      case 't': case 'u': case 'd': case 'r': 
+        //basic button press
+        toggleButton(func);
+        break;
+      case 'D': case 'U':
+        //holds button down
+        vol = line.substring(2).toInt();
+        hold(func, vol);
+        break;
+     case 'i':
+        //turns on
+        on();
+        break;
+     case 'o':
+        //turns off
+        off();
+        break;
+     case 'Z':
+        //zeros
+//        off();
+//        delay(100);
+//        on();
+//        delay(1500);
+//        toggleButton('t');
+//        delay(1000);
+          hold('U',45);
+        break;    
+     default:
+        //Serial.println("function does not exist");
+        break;
+    }
+    //indicates functions are complete
+    Serial.println('A');
+  }
+}
